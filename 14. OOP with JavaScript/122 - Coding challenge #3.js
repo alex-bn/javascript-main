@@ -12,3 +12,47 @@
 // you 'accelerate'! Hint: Review the definiton of polymorphism 😉
 // Test data:
 // § Data car 1: 'Tesla' going at 120 km/h, with a charge of 23%
+
+// Parent Class
+const Car = function (speed, make) {
+  this.speed = speed;
+  this.make = make;
+};
+// Parent methods
+Car.prototype.accelerate = function () {
+  this.speed += 10;
+  console.log(`${this.make} is going at ${this.speed} km/h`);
+};
+Car.prototype.brake = function () {
+  this.speed -= 5;
+  console.log(`${this.make} is going at ${this.speed} km/h`);
+};
+
+// Child Class
+const EV = function (speed, make, charge) {
+  Car.call(this, speed, make);
+  this.charge = charge;
+};
+// Linking the child class to the parent class
+EV.prototype = Object.create(Car.prototype);
+
+// Child methods
+EV.prototype.chargeBattery = function (chargeTo) {
+  this.charge = chargeTo;
+};
+
+EV.prototype.accelerate = function () {
+  this.speed += 20;
+  this.charge = this.charge - this.charge * 0.01;
+  console.log(
+    `${this.make} going at ${this.speed}, with a charge of ${this.charge}`
+  );
+};
+
+// Creating a subclass object
+const tesla = new EV(120, 'Tesla', 23);
+
+tesla.chargeBattery(90);
+console.log(tesla);
+tesla.brake();
+tesla.accelerate();
