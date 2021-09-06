@@ -481,53 +481,129 @@ jay.introduce();
 jay.calcAge();
 
 ///////////////
-// Another Class example:
+// 1) Public fields
+// 2) Private fields
+// 3) Public methods
+// 4) Private method
+// (there is also the static version)
+// 5-8) Static methods - > will not be available on the instances but only on the class itself
 
 class Account {
+  // 1) Public fields (instances)
+  locale = navigator.language;
+
+  // 2) Private fields (instances)
+  #movements = [];
+  #pin;
+
   constructor(owner, currency, pin) {
     this.owner = owner;
     this.currency = currency;
-    this.pin = pin;
-    this.movements = [];
-    this.locale = navigator.language;
+    this.#pin = pin;
 
     console.log(`Thanks for opening an account, ${owner}`);
   }
-  // Public interface of our object (API)
-  deposit(val) {
-    this.movements.push(val);
-  }
-  // abstracts the fact that this is a negative movement
-  withdraw(val) {
-    this.deposit(-val);
+
+  // 3) Public methods / public interfaces of the class
+  getMovements() {
+    return this.#movements;
   }
 
-  approveLoan(val) {
-    return true;
+  deposit(val) {
+    this.#movements.push(val);
+    return this;
+  }
+
+  withdraw(val) {
+    this.deposit(-val);
+    return this;
   }
 
   requestLoan(val) {
-    if (this.approveLoan(val)) {
+    if (this.#approveLoan(val)) {
       this.deposit(val);
       console.log('Loan approved');
+      return this;
     }
+  }
+
+  // 4) Private Methods
+  #approveLoan(val) {
+    return true;
+  }
+
+  // Static Methods
+  static helper() {
+    console.log('Loan approved!');
   }
 }
 
 const acc1 = new Account('Jonas', 'EUR', 1111);
 console.log(acc1);
 
-// not recommended
-// acc1.movements.push(250);
-// acc1.movements.push(-140);
+// acc1.#movements.push(250); //Private field -> syntax error
+// acc1.#movements.push(-140);
+// console.log(acc1.#movements());
+
+// console.log(acc1.#in); // Private filed. Not accessible
+
+// acc1.#approveLoan(2000); // Private method, not accessible from the outside
 
 acc1.deposit(250);
 acc1.withdraw(140);
-
 acc1.requestLoan(1000);
-acc1.approveLoan(2000); // example of another method that should not be accessible from the outside
+Account.helper(); // Static method, is attached only to the class and will not be available on the instances
 
-console.log(acc1.pin); // it should'nt be accessible from outside the class, to be continued..
+/// Chaining Methods - > in order for this to work you need the result of each method to be an account, so all you have to do is to call 'return this;' on all chained methods /// returning 'this' will make the method chainable
+acc1.deposit(300).deposit(500).withdraw(35).requestLoan(25000).withdraw(4000); // not gonna work
 
-// DATA ENCAPSULATION
-// DATA PRIVACY
+console.log(acc1.getMovements());
+//////////
+
+class CarCl {
+  constructor(speed, make) {
+    this.speed = speed;
+    this.make = make;
+  }
+
+  accelerate() {
+    this.speed += 10;
+    console.log(`${this.make} is going at ${this.speed} km/h`);
+  }
+
+  brake() {
+    this.speed -= 5;
+    console.log(`${this.make} is going at ${this.speed} km/h`);
+    return this;
+  }
+}
+
+// Child Class
+class EVCl extends CarCl {
+  #charge;
+
+  constructor(speed, make, charge) {
+    super(speed, make);
+    this.#charge = charge;
+  }
+
+  chargeBattery(chargeTo) {
+    this.#charge = chargeTo;
+    return this;
+  }
+
+  accelerate() {
+    this.speed += 20;
+    this.#charge = this.#charge - this.#charge * 0.01;
+    console.log(
+      `${this.make} going at ${this.speed}, with a charge of ${this.#charge}`
+    );
+    return this;
+  }
+}
+
+// Creating a subclass object
+const rivian = new EVCl(120, 'Rivian', 23);
+console.log(rivian);
+rivian.accelerate().accelerate().chargeBattery(50).accelerate().brake();
+// console.log(rivian.#charge);
