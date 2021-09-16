@@ -246,19 +246,19 @@ btn.addEventListener('click', function () {
 
 // getCurrentPosition takes 2 functions, success and error functions
 
-if (navigator.geolocation)
-  navigator.geolocation.getCurrentPosition(
-    function (position) {
-      console.log(position);
-      const { latitude } = position.coords;
-      const { longitude } = position.coords;
-      console.log(latitude, longitude);
-      console.log(`https://geocode.xyz/${latitude},${longitude}?geoit=json`);
-    },
-    function () {
-      alert('Could not get coordinates..');
-    }
-  );
+// if (navigator.geolocation)
+//   navigator.geolocation.getCurrentPosition(
+//     function (position) {
+//       console.log(position);
+//       const { latitude } = position.coords;
+//       const { longitude } = position.coords;
+//       console.log(latitude, longitude);
+//       console.log(`https://geocode.xyz/${latitude},${longitude}?geoit=json`);
+//     },
+//     function () {
+//       alert('Could not get coordinates..');
+//     }
+//   );
 
 const whereAmI = function (lat, lng) {
   fetch(`https://geocode.xyz/${lat},${lng}?geoit=json`)
@@ -284,3 +284,161 @@ const whereAmI = function (lat, lng) {
 // whereAmI(52.508, 13.381);
 // whereAmI(19.037, 72.873);
 // whereAmI(-33.933, 18.474);
+
+// Event Loop in practice:
+
+// console.log('Test start');
+// setTimeout(() => console.log('1 second timer'), 1);
+// Promise.resolve('Resolved promise 1').then(res => console.log(res));
+
+// Promise.resolve('Resolved promise 2').then(res => {
+//   for (let i = 0; i < 10000000000; i++) {}
+//   console.log(res);
+// });
+// console.log('Test end.');
+
+// Can you guess the order ?
+
+// Top level code -> code outside of any callback  =>  will run first
+
+// Between the timer and the resolved promise is a bit tricky:
+// both the timer and the resolved promise will finish at the exact same time, so right after 0 seconds, the timers callback will be put on the callback queue first but it will be executed only after the callback of the resolved promise! the callback of the resolved promise  will be put on the microtask queue and this microtask queue has priority over the callback queue
+/*
+
+1 -> Test start
+2 -> Test end
+3 -> Resolved promise 1
+4 -> Resolved promise 2 -> just to prove that the nr of seconds is not a guarantee 
+4 -> 1 second timer
+
+*/
+
+// the number seconds time of the setTimeout() function is not a guarantee that the callback will be fired after 1 second, if the the callback before the setTimeout has precedence and need a longer time to execute then the setTimeout() callback will be fired when the previous one is done
+
+////////////////////////////////////////////////////////////////
+
+// Simulate a lottery
+
+// a fulfilled promise means to win the lottery and a rejected one means to loose
+
+// var Promise: PromiseConstructor
+// new <any>(executor: (resolve: (value: any) => void, reject: (reason?: any) => void) => void) => Promise<any>
+
+// Building a promise:
+
+// const lotteryPromise = new Promise(function (resolve, reject) {
+//   //
+//   console.log('Lottery draw is happening 🤞');
+
+//   setTimeout(function () {
+//     if (Math.random() >= 0.5) {
+//       resolve('You WIN ✨');
+//     } else {
+//       reject(new Error('You lost..🤨'));
+//     }
+//   }, 2000);
+// });
+
+// Consuming promises:
+
+// lotteryPromise.then(res => console.log(res)).catch(err => console.log(err));
+
+// Promisefying means to convert callback based asynchronous behaviour to promise based:
+// a function that returns a promise, promisefying setTimeout()
+
+// const wait = function (seconds) {
+//   return new Promise(function (resolve) {
+//     setTimeout(resolve, seconds * 1000);
+//   });
+// };
+
+// wait(2)
+//   .then(() => {
+//     console.log('I waited for 2 seconds');
+//     return wait(1);
+//   })
+//   .then(() => console.log('I waited for 1 second'));
+
+// setTimeout(() => {
+//   console.log('1 second passed');
+//   setTimeout(() => {
+//     console.log('2 second passed');
+//     setTimeout(() => {
+//       console.log('3 second passed');
+//       setTimeout(() => {
+//         console.log('4 second passed');
+//         setTimeout(() => {
+//           console.log('5 second passed');
+//         }, 1000);
+//       }, 1000);
+//     }, 1000);
+//   }, 1000);
+// }, 1000);
+
+// the above code translate to:
+
+// wait(1)
+//   .then(() => {
+//     console.log('I waited for 1 seconds');
+//     return wait(1);
+//   })
+//   .then(() => {
+//     console.log('I waited for 2 seconds');
+//     return wait(1);
+//   })
+//   .then(() => {
+//     console.log('I waited for 3 seconds');
+//     return wait(1);
+//   })
+//   .then(() => {
+//     console.log('I waited for 4 seconds');
+//     return wait(1);
+//   })
+//   .then(() => console.log('I waited for 5 seconds'));
+
+// ... when using promises
+
+// Create a fulfilled or rejected promise immediately:
+
+// Promise.resolve(
+//   'Just Pass The Resolved Value And You Promise Will Resolve Immediately'
+// ).then(res => console.log(res));
+
+// Promise.reject(
+//   'Just Pass The Rejected Value And You Promise Will Reject Immediately'
+// ).catch(err => console.log(err));
+
+// Promise.reject(new Error('Rejected Promise')).catch(err => console.log(err));
+
+////////////////////////////////
+// let arr = [1, 2, 3, 4, 5];
+// console.log(arr.__proto__ === Array.prototype);
+
+////////////////////////////////
+// Promisifying the geolocation API
+
+// using async code:
+navigator.geolocation.getCurrentPosition(
+  position => console.log(position),
+  err => console.log(err)
+);
+
+console.log('Getting position..');
+///
+
+// promisiying the function:
+
+const getPosition = function () {
+  return new Promise(function (resolve, reject) {
+    // navigator.geolocation.getCurrentPosition(
+    //   position => resolve(position),
+    //   err => reject(err)
+    // );
+
+    // ..equivalent to:
+
+    navigator.geolocation.getCurrentPosition(resolve, reject);
+  });
+};
+
+getPosition().then(pos => console.log(pos));
