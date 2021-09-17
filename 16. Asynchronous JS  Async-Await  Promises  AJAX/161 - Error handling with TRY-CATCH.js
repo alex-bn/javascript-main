@@ -1,4 +1,17 @@
 'use strict';
+////////////////////////////////
+// With async/await we can't use the catch() method because we can't really attach it anywhere
+// So instead we use a try/catch statement
+
+//How it works:
+
+// try {
+//   let y = 1;
+//   const x = 2;
+//   x = 3;
+// } catch (err) {
+//   alert(err.message);
+// }
 
 const btn = document.querySelector('.btn-country');
 const countriesContainer = document.querySelector('.countries');
@@ -36,21 +49,28 @@ const getPosition = function () {
 };
 
 const whereAmI = async function () {
-  //Geolocation
-  const pos = await getPosition();
-  const { latitude: lat, longitude: lng } = pos.coords;
+  try {
+    //Geolocation
+    const pos = await getPosition();
+    const { latitude: lat, longitude: lng } = pos.coords;
 
-  //Reverse geocoding
-  const resGeo = await fetch(`https://geocode.xyz/${lat},${lng}?geoit=json`);
-  const dataGeo = await resGeo.json();
+    //Reverse geocoding
+    const resGeo = await fetch(`https://geocode.xyz/${lat},${lng}?geoit=json`);
+    if (!resGeo.ok) throw new Error(`could not get location data.`);
+    const dataGeo = await resGeo.json();
 
-  //Country data
-  const res = await fetch(
-    `https://restcountries.eu/rest/v2/name/${dataGeo.country}`
-  );
-  const data = await res.json();
-  renderCountry(data[0]);
+    //Country data
+    const res = await fetch(
+      `https://restcountries.eu/rest/v2/name/${dataGeo.country}`
+    );
+    if (!res.ok) throw new Error(`Problem getting country.`);
+
+    const data = await res.json();
+    renderCountry(data[0]);
+  } catch (err) {
+    console.log(`${err}💥`);
+    renderError(`Something went wrong: ${err.message}`);
+  }
 };
 
 whereAmI();
-console.log('FIRST');

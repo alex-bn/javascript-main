@@ -165,12 +165,12 @@ const renderError = function (msg) {
 
 //Chaining promises:
 
-const getJSON = function (url, errorMsg = 'Something went wrong') {
-  return fetch(url).then(response => {
-    if (!response.ok) throw new Error(`${errorMsg} (${response.status})`);
-    return response.json();
-  });
-};
+// const getJSON = function (url, errorMsg = 'Something went wrong') {
+//   return fetch(url).then(response => {
+//     if (!response.ok) throw new Error(`${errorMsg} (${response.status})`);
+//     return response.json();
+//   });
+// };
 
 // const getCountryData = function (country) {
 //   // Country 1
@@ -210,35 +210,35 @@ const getJSON = function (url, errorMsg = 'Something went wrong') {
 // A promise in which an error happened is a rejected promise
 // The only way in which the fetch promise rejects is when the user looses its internet connection
 
-const getCountryData = function (country) {
-  // Country 1
-  getJSON(
-    `https:/restcountries.eu/rest/v2/name/${country}`,
-    'Country not found'
-  )
-    .then(data => {
-      renderCountry(data[0]);
-      const neighbour = data[0].borders[0];
-      if (!neighbour) throw new Error('No neighbour found!');
+// const getCountryData = function (country) {
+//   // Country 1
+//   getJSON(
+//     `https:/restcountries.eu/rest/v2/name/${country}`,
+//     'Country not found'
+//   )
+//     .then(data => {
+//       renderCountry(data[0]);
+//       const neighbour = data[0].borders[0];
+//       if (!neighbour) throw new Error('No neighbour found!');
 
-      // Country 2
-      return getJSON(
-        `https://restcountries.eu/rest/v2/alpha/${neighbour}`,
-        'Country not found '
-      );
-    })
-    .then(data => renderCountry(data, 'neighbour'))
-    .catch(err => {
-      console.error(`${err} !!!!`);
-      renderError(`Something went wrong..${err.message}`);
-    })
-    .finally(() => {
-      countriesContainer.style.opacity = 1;
-    });
-};
+//       // Country 2
+//       return getJSON(
+//         `https://restcountries.eu/rest/v2/alpha/${neighbour}`,
+//         'Country not found '
+//       );
+//     })
+//     .then(data => renderCountry(data, 'neighbour'))
+//     .catch(err => {
+//       console.error(`${err} !!!!`);
+//       renderError(`Something went wrong..${err.message}`);
+//     })
+//     .finally(() => {
+//       countriesContainer.style.opacity = 1;
+//     });
+// };
 
 // btn.addEventListener('click', function () {
-// getCountryData('portugal');
+//   getCountryData('portugal');
 // });
 // getCountryData('australia');
 
@@ -417,57 +417,57 @@ const getCountryData = function (country) {
 ////////////////////////////////
 // Promisifying the geolocation API
 
-// using async code:
-navigator.geolocation.getCurrentPosition(
-  position => console.log(position),
-  err => console.log(err)
-);
+// // using async code:
+// navigator.geolocation.getCurrentPosition(
+//   position => console.log(position),
+//   err => console.log(err)
+// );
 
-console.log('Getting position..');
-///
+// console.log('Getting position..');
+// ///
 
 // promisiying the function:
 
-const getPosition = function () {
-  return new Promise(function (resolve, reject) {
-    // navigator.geolocation.getCurrentPosition(
-    //   position => resolve(position),
-    //   err => reject(err)
-    // );
+// const getPosition = function () {
+//   return new Promise(function (resolve, reject) {
+//     // navigator.geolocation.getCurrentPosition(
+//     //   position => resolve(position),
+//     //   err => reject(err)
+//     // );
 
-    // ..equivalent to:
+//     // ..equivalent to:
 
-    navigator.geolocation.getCurrentPosition(resolve, reject);
-  });
-};
+//     navigator.geolocation.getCurrentPosition(resolve, reject);
+//   });
+// };
 
-getPosition().then(pos => console.log(pos));
+// getPosition().then(pos => console.log(pos));
 
-const whereAmI = function () {
-  getPosition()
-    .then(pos => {
-      const { latitude: lat, longitude: lng } = pos.coords;
-      return fetch(`https://geocode.xyz/${lat},${lng}?geoit=json`);
-    })
+// const whereAmI = function () {
+//   getPosition()
+//     .then(pos => {
+//       const { latitude: lat, longitude: lng } = pos.coords;
+//       return fetch(`https://geocode.xyz/${lat},${lng}?geoit=json`);
+//     })
 
-    .then(res => {
-      if (!res.ok) throw new Error(`Problem with geocoding ${res.status}`);
-      return res.json();
-    })
-    .then(data => {
-      console.log(data);
-      console.log(`You are in ${data.city}, ${data.country}`);
+//     .then(res => {
+//       if (!res.ok) throw new Error(`Problem with geocoding ${res.status}`);
+//       return res.json();
+//     })
+//     .then(data => {
+//       console.log(data);
+//       console.log(`You are in ${data.city}, ${data.country}`);
 
-      return fetch(`https://restcountries.eu/rest/v2/name/${data.country}`);
-    })
-    .then(res => {
-      if (!res.ok) throw new Error(`Country not found (${res.status})`);
+//       return fetch(`https://restcountries.eu/rest/v2/name/${data.country}`);
+//     })
+//     .then(res => {
+//       if (!res.ok) throw new Error(`Country not found (${res.status})`);
 
-      return res.json();
-    })
-    .then(data => renderCountry(data[0]))
-    .catch(err => console.error(`${err.message} ***`));
-};
+//       return res.json();
+//     })
+//     .then(data => renderCountry(data[0]))
+//     .catch(err => console.error(`${err.message} ***`));
+// };
 
 // btn.addEventListener('click', whereAmI);
 
@@ -532,3 +532,86 @@ GOOD LUCK 😀
 //     currentImage.style.display = 'none';
 //   })
 //   .catch(err => console.error(err));
+
+///////////
+// Consuming promises with async/await
+
+// // syntactic sugar: behind the scene we have the then() method running
+// fetch(`https://restcountries.eu/rest/v2/name/${country}`).then(res => {
+//   console.log(res);
+//   console.log(typeof res);
+// });
+////////////////////////////////
+// With async/await we can't use the catch() method because we can't really attach it anywhere
+// So instead we use a try/catch statement
+
+//How it works:
+
+// try {
+//   let y = 1;
+//   const x = 2;
+//   x = 3;
+// } catch (err) {
+//   alert(err.message);
+// }
+
+const getPosition = function () {
+  return new Promise(function (resolve, reject) {
+    navigator.geolocation.getCurrentPosition(resolve, reject);
+  });
+};
+
+const whereAmI = async function () {
+  try {
+    //Geolocation
+    const pos = await getPosition();
+    const { latitude: lat, longitude: lng } = pos.coords;
+
+    //Reverse geocoding
+    const resGeo = await fetch(`https://geocode.xyz/${lat},${lng}?geoit=json`);
+    if (!resGeo.ok) throw new Error(`could not get location data.`);
+    const dataGeo = await resGeo.json();
+
+    //Country data
+    const res = await fetch(
+      `https://restcountries.eu/rest/v2/name/${dataGeo.country}`
+    );
+    if (!res.ok) throw new Error(`Problem getting country.`);
+
+    const data = await res.json();
+    renderCountry(data[0]);
+
+    return `You are in ${dataGeo.city}, ${dataGeo.country}`;
+  } catch (err) {
+    console.log(`${err}💥`);
+    renderError(`Something went wrong: ${err.message}`);
+
+    //Reject promise returned from async function:
+    throw err;
+  }
+};
+
+// const city = whereAmI();
+// console.log(city);
+
+// whereAmI()
+//   .then(city => console.log(`2-city: ${city}`))
+//   .catch(err => console.error(`2-error: ${err.message}`))
+//   .finally(() => {
+//     console.log('3 Finished getting location');
+//   });
+
+// convert to async / await using an iffy:
+
+(function () {})();
+
+(async function () {
+  console.log('1: Will get location');
+  try {
+    const city = await whereAmI();
+    console.log(`2: ${city}`);
+  } catch (err) {
+    console.error(`2: ${err.message}`);
+  }
+  console.log('3: Done!');
+})();
